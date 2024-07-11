@@ -20,9 +20,6 @@ export class Jx3Internal {
           ) {
             const url = "https://www.jx3api.com" + path;
             const config: HTTP.RequestConfig = {};
-            if (args.length == 0) {
-              throw new Error(`缺少参数`);
-            }
             config.data = args[0];
             const http = this.http();
             try {

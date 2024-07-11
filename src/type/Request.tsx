@@ -28,7 +28,7 @@ export interface RolePropertyRequest {
   server: string;
   name: string;
   nickname: string;
-  cache: 1;
+  cache?: 1;
   ticket: string;
   token: string;
 }
@@ -38,5 +38,30 @@ export interface ItemPriceRequest {
   name: string;
   nickname: string;
   cache: number;
+  token: string;
+}
+
+export interface GoldRequest {
+  browser: 1;
+  server: string;
+  nickname: string;
+  cache: 1;
+}
+
+export interface PrivateLuckRequest {
+  browser: number;
+  server: string;
+  nickname: string;
+  name: string;
+  ticket: string;
+  token: string;
+}
+
+export interface RecruitRequest {
+  browser?: number;
+  server: string;
+  keyword?: string;
+  nickname?: string;
+  cache?: number;
   token: string;
 }

@@ -1,10 +1,13 @@
 import { Jx3Api } from "./Interface";
 import {
   ExamRequest,
+  GoldRequest,
   ItemPriceRequest,
   MainServerRequest,
   NewsOfficialRequest,
   NoticeRequest,
+  PrivateLuckRequest,
+  RecruitRequest,
   RolePropertyRequest,
   ServerCheckRequest,
 } from "./Request";
@@ -27,6 +30,16 @@ declare module "./Interface" {
     getRoleProperty(request: RolePropertyRequest): Promise<any>;
     //物品价格
     getItemPrice(request: ItemPriceRequest): Promise<any>;
+    //骚话
+    Saohua(): Promise<any>;
+    //查人
+    Fraud(request: any): Promise<any>;
+    //金价
+    GoldPrice(request: GoldRequest): Promise<any>;
+    //奇遇
+    PrivateLuck(request: PrivateLuckRequest): Promise<any>;
+    //招募
+    getRecruit(request: RecruitRequest): Promise<any>;
   }
 }
 
@@ -54,5 +67,20 @@ Jx3Api.define({
   },
   "/view/trade/record": {
     POST: "getItemPrice",
+  },
+  "/data/saohua/random": {
+    POST: "Saohua",
+  },
+  "/data/fraud/detail": {
+    POST: "Fraud",
+  },
+  "/view/trade/demon": {
+    POST: "GoldPrice",
+  },
+  "/view/luck/adventure": {
+    POST: "PrivateLuck",
+  },
+  "/view/member/recruit": {
+    POST: "getRecruit",
   },
 });

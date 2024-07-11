@@ -1,6 +1,6 @@
 {
-  "name": "koishi-plugin-jx3",
-  "description": "jx3",
+  "name": "koishi-plugin-mai-jx3",
+  "description": "咕咕剑三插件",
   "version": "0.0.1",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -12,9 +12,20 @@
   "keywords": [
     "chatbot",
     "koishi",
-    "plugin"
+    "plugin",
+    "jx3",
+    "剑三"
   ],
   "peerDependencies": {
     "koishi": "4.17.6"
+  },
+  "koishi": {
+    "description": {
+      "zh": "咕咕剑三插件"
+    },
+    "preview": true
+  },
+  "dependencies": {
+    "@satorijs/element": "^3.1.7"
   }
 }
