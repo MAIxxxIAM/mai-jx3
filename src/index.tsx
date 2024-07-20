@@ -7,6 +7,7 @@ import { ActionRequest } from "koishi-plugin-actionbuttonsim";
 import { jx3data, models, jx3Socket } from "./database";
 import { WebSocket } from "ws";
 import {} from "@koishijs/plugin-adapter-qq";
+import { Horse } from "./type/horse";
 
 export const name = "mai-jx3";
 export const inject = {
@@ -27,7 +28,7 @@ export const Config: Schema<Config> = Schema.object({
   官方BOT_APPID: Schema.string(),
 });
 
-export function apply(ctx: Context, config: Config) {
+export async function apply(ctx: Context, config: Config) {
   Api;
   const api = new Jx3Api(ctx);
 
@@ -439,6 +440,20 @@ export function apply(ctx: Context, config: Config) {
           break;
       }
     });
+    ctx.command("马场 [server:string]", "查询马场").action(async ({ session }, server) =>{
+      server = server === "地狱之门" ? "绝代天骄" : server;
+
+      const mainserver = await api.getMainServer({ name: server });
+      const [group] = await ctx.database.get("jx3Api", (row) =>
+        $.eq(row.id, session.channelId)
+      );
+      if(!server&&!group?.server) return `请输入服务器`
+      server=server?server:group.server;
+      server = mainserver.code == 200 ? mainserver.data.name : server;
+      const horse=new Horse(server,ctx)
+      const data=await horse.horse()
+      await session.send("\u200b\n"+data)
+    })
   ctx
     .command("奇遇 <server:string> <name:string>", "查询角色奇遇")
     .action(async ({ session }, server, name) => {
