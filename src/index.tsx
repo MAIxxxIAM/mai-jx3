@@ -3,7 +3,6 @@ import { Jx3Api } from "./type/Interface";
 import * as Api from "./type/API";
 import { keyboardItem, sendButton, sendUrl } from "./utils/method";
 import { ItemPriceRequest, RolePropertyRequest } from "./type/Request";
-import { ActionRequest } from "koishi-plugin-actionbuttonsim";
 import { jx3data, models, jx3Socket } from "./database";
 import { WebSocket } from "ws";
 import {} from "@koishijs/plugin-adapter-qq";
@@ -11,7 +10,7 @@ import { Horse } from "./type/horse";
 
 export const name = "mai-jx3";
 export const inject = {
-  required: ["database", "actionButtonSim"],
+  required: ["database"],
 };
 
 export interface Config {
@@ -233,27 +232,19 @@ export async function apply(ctx: Context, config: Config) {
         break;
     }
   });
-  ctx.on("ready", async () => {
-    await connectWebSocket();
-  });
+  // ctx.on("ready", async () => {
+  //   await connectWebSocket();
+  // });
 
-  ctx.command("绑定群组 <qq:string>").action(async ({ session }, qq) => {
-    if (!qq) return `请输入QQ群号`;
-    let actionreq: ActionRequest = {
-      g: qq,
-      a: config.官方BOT_APPID,
-      b: `绑定验证1`,
-      d: session.channelId + "^" + qq,
-    };
-    await ctx.actionButtonSim.action(actionreq);
-  });
-
-  // ctx.command("test111").action(async ({ session }) => {
-  //   const groups: jx3data[] = await ctx.database
-  //     .select("jx3Api")
-  //     .where((row) => $.eq(row.socket[2001], false))
-  //     .execute();
-  //   console.log(groups);
+  // ctx.command("绑定群组 <qq:string>").action(async ({ session }, qq) => {
+  //   if (!qq) return `请输入QQ群号`;
+  //   let actionreq: ActionRequest = {
+  //     g: qq,
+  //     a: config.官方BOT_APPID,
+  //     b: `绑定验证1`,
+  //     d: session.channelId + "^" + qq,
+  //   };
+  //   await ctx.actionButtonSim.action(actionreq);
   // });
 
   ctx.command("更新公告", "获取最新的官方公告").action(async ({ session }) => {
@@ -440,20 +431,22 @@ export async function apply(ctx: Context, config: Config) {
           break;
       }
     });
-    ctx.command("马场 [server:string]", "查询马场").action(async ({ session }, server) =>{
+  ctx
+    .command("马场 [server:string]", "查询马场")
+    .action(async ({ session }, server) => {
       server = server === "地狱之门" ? "绝代天骄" : server;
 
       const mainserver = await api.getMainServer({ name: server });
       const [group] = await ctx.database.get("jx3Api", (row) =>
         $.eq(row.id, session.channelId)
       );
-      if(!server&&!group?.server) return `请输入服务器`
-      server=server?server:group.server;
+      if (!server && !group?.server) return `请输入服务器`;
+      server = server ? server : group.server;
       server = mainserver.code == 200 ? mainserver.data.name : server;
-      const horse=new Horse(server,ctx)
-      const data=await horse.horse()
-      await session.send("\u200b\n"+data)
-    })
+      const horse = new Horse(server, ctx);
+      const data = await horse.horse();
+      await session.send("\u200b\n" + data);
+    });
   ctx
     .command("奇遇 <server:string> <name:string>", "查询角色奇遇")
     .action(async ({ session }, server, name) => {
@@ -505,68 +498,68 @@ export async function apply(ctx: Context, config: Config) {
     });
 
   //ws
-  async function connectWebSocket() {
-    const apiWS = (await ctx.http.ws(
-      "wss://socket.nicemoe.cn"
-    )) as unknown as WebSocket;
-    let heartBeatTimeout;
-    let heartBeatInterval;
+  //   async function connectWebSocket() {
+  //     const apiWS = (await ctx.http.ws(
+  //       "wss://socket.nicemoe.cn"
+  //     )) as unknown as WebSocket;
+  //     let heartBeatTimeout;
+  //     let heartBeatInterval;
 
-    function startHeartBeat() {
-      heartBeatInterval = setInterval(() => {
-        apiWS.ping();
-      }, 30000);
+  //     function startHeartBeat() {
+  //       heartBeatInterval = setInterval(() => {
+  //         apiWS.ping();
+  //       }, 30000);
 
-      heartBeatTimeout = setTimeout(() => {
-        apiWS.close();
-      }, 35000);
-    }
+  //       heartBeatTimeout = setTimeout(() => {
+  //         apiWS.close();
+  //       }, 35000);
+  //     }
 
-    function resetHeartBeat() {
-      clearTimeout(heartBeatTimeout);
-      clearInterval(heartBeatInterval);
-      startHeartBeat();
-    }
+  //     function resetHeartBeat() {
+  //       clearTimeout(heartBeatTimeout);
+  //       clearInterval(heartBeatInterval);
+  //       startHeartBeat();
+  //     }
 
-    apiWS.on("open", () => {
-      startHeartBeat();
-    });
+  //     apiWS.on("open", () => {
+  //       startHeartBeat();
+  //     });
 
-    apiWS.on("close", () => {
-      clearTimeout(heartBeatTimeout);
-      clearInterval(heartBeatInterval);
-      setTimeout(connectWebSocket, 1000);
-    });
+  //     apiWS.on("close", () => {
+  //       clearTimeout(heartBeatTimeout);
+  //       clearInterval(heartBeatInterval);
+  //       setTimeout(connectWebSocket, 1000);
+  //     });
 
-    apiWS.on("pong", () => {
-      logger.info("心跳响应，ws连接正常");
-      resetHeartBeat();
-    });
-    apiWS.on("message", async (data) => {
-      const msg = JSON.parse(data.toString());
-      logger.info(msg);
-      if (msg.action === 10000) {
-        let actionreq: ActionRequest = {
-          g: "685130953",
-          a: config.官方BOT_APPID,
-          b: `推送`,
-          d: data.toString(),
-        };
-        await ctx.actionButtonSim.action(actionreq);
-      }
-      const groups: jx3data[] = await ctx.database
-        .select("jx3Api")
-        .where((row) => $.and($.eq(row.socket[msg.action], true)))
-        .execute();
-      for (let group of groups) {
-        let actionreq: ActionRequest = {
-          g: group.group_id,
-          a: config.官方BOT_APPID,
-          b: `推送`,
-          d: data.toString(),
-        };
-        await ctx.actionButtonSim.action(actionreq);
-      }
-    });
-  }
+  //     apiWS.on("pong", () => {
+  //       logger.info("心跳响应，ws连接正常");
+  //       resetHeartBeat();
+  //     });
+  //     apiWS.on("message", async (data) => {
+  //       const msg = JSON.parse(data.toString());
+  //       logger.info(msg);
+  //       if (msg.action === 10000) {
+  //         let actionreq: ActionRequest = {
+  //           g: "685130953",
+  //           a: config.官方BOT_APPID,
+  //           b: `推送`,
+  //           d: data.toString(),
+  //         };
+  //         await ctx.actionButtonSim.action(actionreq);
+  //       }
+  //       const groups: jx3data[] = await ctx.database
+  //         .select("jx3Api")
+  //         .where((row) => $.and($.eq(row.socket[msg.action], true)))
+  //         .execute();
+  //       for (let group of groups) {
+  //         let actionreq: ActionRequest = {
+  //           g: group.group_id,
+  //           a: config.官方BOT_APPID,
+  //           b: `推送`,
+  //           d: data.toString(),
+  //         };
+  //         await ctx.actionButtonSim.action(actionreq);
+  //       }
+  //     });
+  //   }
 }
